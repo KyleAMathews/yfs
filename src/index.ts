@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { set as idbSet, get as idbGet, del as idbDel } from 'idb-keyval'
-import * as Y from 'yjs'
-import { STORE_KEY_DIRECTORY_HANDLE } from './constants'
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { set as idbSet, get as idbGet, del as idbDel } from "idb-keyval"
+import * as Y from "yjs"
+import { STORE_KEY_DIRECTORY_HANDLE } from "./constants"
 import {
   askReadWritePermissionsIfNeeded,
   createFile,
   getFSFileHandle,
-  writeContentToFileIfChanged
-} from './helpers'
-import { getLastWriteCacheData, setLastWriteCacheData } from './cache'
-import { getDeltaOperations } from './yjs'
+  writeContentToFileIfChanged,
+} from "./helpers"
+import { getLastWriteCacheData, setLastWriteCacheData } from "./cache"
+import { getDeltaOperations } from "./yjs"
 
 const useFileSync = () => {
   const [isSupported, setSupported] = useState(false)
@@ -19,7 +19,7 @@ const useFileSync = () => {
   >(undefined)
 
   useEffect(() => {
-    setSupported(typeof (window as any).showDirectoryPicker === 'function')
+    setSupported(typeof (window as any).showDirectoryPicker === `function`)
   }, [])
 
   useEffect(() => {
@@ -90,12 +90,13 @@ const useFileSync = () => {
         await setLastWriteCacheData(name, newContent, file.lastModified)
       }
 
-      let fileHandle = await getFSFileHandle(name, directoryHandle)
+      const fileHandle = await getFSFileHandle(name, directoryHandle)
+      // TODO run custom serialization
       const docContent = doc.getText().toString()
 
       if (!fileHandle) {
         // File is not present in the file system, so create it.
-        const newFileHandle = await createFile(directoryHandle, name, '')
+        const newFileHandle = await createFile(directoryHandle, name, ``)
         const newFile = await newFileHandle.getFile()
         await updateFileContent(newFile, newFileHandle, docContent)
         return
@@ -133,8 +134,9 @@ const useFileSync = () => {
       }
 
       // File has changed in the file system.
-
       const fileContent = await file.text()
+
+      // TODO custom deserialization & delta calculation / application.
       const lastWriteFileContent = lastWriteCacheData.content
       const deltas = getDeltaOperations(lastWriteFileContent, fileContent)
 
@@ -150,6 +152,7 @@ const useFileSync = () => {
       doc.getText().applyDelta(deltas)
 
       const mergedContent = doc.getText().toString()
+      // TODO custom serialization.
       await updateFileContent(file, fileHandle, mergedContent)
     },
     [directoryHandle]
@@ -166,7 +169,7 @@ const useFileSync = () => {
     grantWritePermission,
     isWritePermissionGranted,
     directoryName,
-    syncDoc
+    syncDoc,
   }
 }
 
